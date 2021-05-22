@@ -1,0 +1,6 @@
+devid=kfischer-okarin
+devtitle=Kevin Fischer
+gameid=drgauntletjam2021
+gametitle=DragonRuby Classics Jam: Gauntlet Edition 2021
+version=0.1
+#icon=metadata/icon.png
