@@ -115,11 +115,25 @@ def setup(args)
   }
 end
 
+def calc_axis_value(positive, negative)
+  if positive
+    negative ? 0 : 1
+  elsif negative
+    positive ? 0 : -1
+  else
+    0
+  end
+end
+
 def process_input(args)
   keyboard = args.inputs.keyboard
+  key_held = keyboard.key_held
 
   {
-    movement: [keyboard.left_right, keyboard.up_down]
+    movement: [
+      calc_axis_value(key_held.d, key_held.a),
+      calc_axis_value(key_held.w, key_held.s)
+    ]
   }
 end
 
