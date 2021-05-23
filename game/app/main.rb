@@ -133,6 +133,10 @@ def process_input(args)
     movement: [
       calc_axis_value(key_held.d, key_held.a),
       calc_axis_value(key_held.w, key_held.s)
+    ],
+    shoot_direction: [
+      calc_axis_value(key_held.right, key_held.left),
+      calc_axis_value(key_held.up, key_held.down)
     ]
   }
 end
@@ -140,9 +144,25 @@ end
 def world_tick(args, input_events)
   player = args.state.player
   movement = input_events[:movement]
+  shoot_direction = input_events[:shoot_direction]
   player.movement.assign_array! movement
+
   unless movement.zero?
-    player.position.add_array! movement
+    walk_shoot_same = shoot_direction.zero? ||
+      (!shoot_direction.x.zero? && shoot_direction.x == movement.x) ||
+      (!shoot_direction.y.zero? && shoot_direction.y == movement.y)
+    if walk_shoot_same
+      player.position.x += movement.x * 1.2
+      player.position.y += movement.y * 1.2
+    else
+      player.position.x += movement.x * 0.7
+      player.position.y += movement.y * 0.7
+    end
+  end
+
+  if !shoot_direction.zero?
+    player.direction.assign_array! shoot_direction
+  elsif !movement.zero?
     player.direction.assign_array! movement
   end
 end
