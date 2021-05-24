@@ -22,11 +22,33 @@ class Array
     end
     self
   end
+
+  def mult_scalar!(value)
+    index = 0
+    while index < length
+      self[index] *= value
+      index += 1
+    end
+    self
+  end
+end
+
+def generate_next_entity_id(args)
+  result = args.state.next_entity_id
+  args.state.next_entity_id += 1
+  result
+end
+
+def add_entity(args, entity)
+  args.state.entities[entity.id] = entity
+  args.state.moving_entities[entity.id] = entity if entity.respond_to? :movement
 end
 
 def setup(args)
+  args.state.next_entity_id = 1
   args.state.player = args.state.new_entity_strict(
     :player,
+    id: generate_next_entity_id(args),
     position: [160, 90],
     movement: [0, 0],
     direction: [0, -1]
@@ -37,6 +59,9 @@ def setup(args)
       animation: Animation.new(:character_down)
     }.sprite
   }
+  args.state.entities = {}
+  args.state.moving_entities = {}
+  add_entity(args, args.state.player)
 end
 
 def calc_axis_value(positive, negative)
@@ -75,19 +100,22 @@ def world_tick(args, input_events)
     walk_shoot_same = shoot_direction.zero? ||
       (!shoot_direction.x.zero? && shoot_direction.x == movement.x) ||
       (!shoot_direction.y.zero? && shoot_direction.y == movement.y)
-    if walk_shoot_same
-      player.position.x += movement.x * 1.2
-      player.position.y += movement.y * 1.2
-    else
-      player.position.x += movement.x * 0.7
-      player.position.y += movement.y * 0.7
-    end
+
+    player.movement.mult_scalar!(walk_shoot_same ? 1.2 : 0.7)
   end
 
   if !shoot_direction.zero?
     player.direction.assign_array! shoot_direction
   elsif !movement.zero?
     player.direction.assign_array! movement
+  end
+
+  handle_movement(args)
+end
+
+def handle_movement(args)
+  args.state.moving_entities.each_value do |entity|
+    entity.position.add_array! entity.movement
   end
 end
 
