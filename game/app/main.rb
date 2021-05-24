@@ -183,6 +183,16 @@ def next_player_animation(player)
 end
 
 def render(args)
+  screen = args.outputs[:screen]
+  render_player(args, screen)
+
+  args.outputs.primitives << {
+    x: 0, y: 0, w: 1280, h: 720,
+    path: :screen, source_x: 0, source_y: 0, source_w: 320, source_h: 180
+  }
+end
+
+def render_player(args, outputs)
   player = args.state.player
   player_sprite = $sprites[:player]
   player_sprite.x = player.position.x - 8
@@ -202,11 +212,7 @@ def render(args)
     animation.tick
   end
 
-  args.outputs[:screen].primitives << player_sprite
-  args.outputs.primitives << {
-    x: 0, y: 0, w: 1280, h: 720,
-    path: :screen, source_x: 0, source_y: 0, source_w: 320, source_h: 180
-  }
+  outputs.primitives << player_sprite
 end
 
 def tick(args)
