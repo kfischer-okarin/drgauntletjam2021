@@ -70,6 +70,14 @@ class Animation
       { values: { source_x: 16, source_y: 3 * 16, flip_horizontally: false }, length: 10 },
       { values: { source_x: 0, source_y: 3 * 16, flip_horizontally: false }, length: 10 },
       { values: { source_x: 16, source_y: 3 * 16, flip_horizontally: false }, length: 10 }
+    ],
+    bullet: [
+      { values: { source_x: 0 }, length: 3 },
+      { values: { source_x: 4 }, length: 3 },
+      { values: { source_x: 8 }, length: 3 },
+      { values: { source_x: 12 }, length: 3 },
+      { values: { source_x: 16 }, length: 3 },
+      { values: { source_x: 20 }, length: 3 }
     ]
   }
 end

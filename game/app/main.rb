@@ -14,6 +14,10 @@ class Array
     self
   end
 
+  def add_array(other)
+    dup.add_array!(other)
+  end
+
   def assign_array!(other)
     index = 0
     while index < length
@@ -31,17 +35,42 @@ class Array
     end
     self
   end
+
+  def mult_scalar(value)
+    dup.mult_scalar!(value)
+  end
+end
+
+module Entities
+  class << self
+    def setup(args)
+      args.state.new_entities = []
+      args.state.entities = {}
+      args.state.moving_entities = {}
+      self.args = args
+    end
+
+    def args=(args)
+      @args = args
+      @entities = args.state.entities
+    end
+
+    def [](id)
+      @entities[id]
+    end
+
+    def <<(entity)
+      @args.state.new_entities << entity.id
+      @entities[entity.id] = entity
+      @args.state.moving_entities[entity.id] = entity if entity.respond_to? :movement
+    end
+  end
 end
 
 def generate_next_entity_id(args)
   result = args.state.next_entity_id
   args.state.next_entity_id += 1
   result
-end
-
-def add_entity(args, entity)
-  args.state.entities[entity.id] = entity
-  args.state.moving_entities[entity.id] = entity if entity.respond_to? :movement
 end
 
 def setup(args)
@@ -51,22 +80,43 @@ def setup(args)
     id: generate_next_entity_id(args),
     position: [160, 90],
     movement: [0, 0],
-    direction: [0, -1]
+    direction: [0, -1],
+    shoot_cooldown: 30,
+    time_until_next_shot: 0
   )
   $sprites = {
     player: {
       x: 0, y:0, w: 16, h: 16, path: 'sprites/character.png', source_w: 16, source_h: 16
     }.sprite.tap { |sprite| sprite[:animation] = Animation.new(sprite, :character_down) },
-    bullets: [
-      {
-        x: 200, y:100, w: 4, h: 6, path: 'sprites/bullet.png', source_w: 4, source_h: 6,
-        angle_anchor_x: 0.5, angle_anchor_y: 0.5,
-      }.sprite.tap { |sprite| sprite[:animation] = Animation.new(sprite, :bullet) }
-    ]
+    bullets: []
   }
-  args.state.entities = {}
-  args.state.moving_entities = {}
-  add_entity(args, args.state.player)
+  Entities.setup args
+  Entities << args.state.player
+end
+
+def angle_from_direction(direction)
+  normalized = [direction.x.sign, direction.y.sign]
+  case normalized
+  when [0, 1], [0, -1]
+    0
+  when [1, -1], [-1, 1]
+    45
+  when [1, 1], [-1, -1]
+    -45
+  when [1, 0], [-1, 0]
+    90
+  end
+end
+
+def build_bullet_sprite(bullet)
+  {
+    x: 200, y:100, w: 4, h: 6, path: 'sprites/bullet.png', source_w: 4, source_h: 6,
+    r: 81, g: 162, b: 0,
+    angle_anchor_x: 0.5, angle_anchor_y: 0.5, angle: angle_from_direction(bullet.movement),
+    entity_id: bullet.id
+  }.sprite.tap { |sprite|
+    sprite[:animation] = Animation.new(sprite, :bullet)
+  }
 end
 
 def calc_axis_value(positive, negative)
@@ -96,6 +146,13 @@ def process_input(args)
 end
 
 def world_tick(args, input_events)
+  calc_player_movement(args, input_events)
+  handle_shoot(args, input_events)
+
+  handle_movement(args)
+end
+
+def calc_player_movement(args, input_events)
   player = args.state.player
   movement = input_events[:movement]
   shoot_direction = input_events[:shoot_direction]
@@ -114,8 +171,22 @@ def world_tick(args, input_events)
   elsif !movement.zero?
     player.direction.assign_array! movement
   end
+end
 
-  handle_movement(args)
+def handle_shoot(args, input_events)
+  player = args.state.player
+  player.time_until_next_shot -= 1 if player.time_until_next_shot.positive?
+  return if input_events[:shoot_direction].zero? || player.time_until_next_shot.positive?
+
+  bullet = args.state.new_entity_strict(
+    :bullet,
+    id: generate_next_entity_id(args),
+    position: player.position.add_array(input_events[:shoot_direction].mult_scalar(8)).add_array!([0, 8]),
+    movement: input_events[:shoot_direction].mult_scalar(2)
+  )
+
+  Entities << bullet
+  player.time_until_next_shot = player.shoot_cooldown
 end
 
 def handle_movement(args)
@@ -141,12 +212,25 @@ end
 
 def render(args)
   screen = args.outputs[:screen]
+  add_new_entity_sprites(args)
   render_player(args, screen)
+  render_bullets(args, screen)
 
   args.outputs.primitives << {
     x: 0, y: 0, w: 1280, h: 720,
     path: :screen, source_x: 0, source_y: 0, source_w: 320, source_h: 180
   }
+end
+
+def add_new_entity_sprites(args)
+  args.state.new_entities.each do |entity_id|
+    entity = Entities[entity_id]
+    case entity.entity_type
+    when :bullet
+      $sprites[:bullets] << build_bullet_sprite(entity)
+    end
+  end
+  args.state.new_entities.clear
 end
 
 def render_player(args, outputs)
@@ -164,10 +248,23 @@ def render_player(args, outputs)
   end
 
   outputs.primitives << player_sprite
+  outputs.primitives << [player.position, 1, 1].solid
+end
+
+def render_bullets(args, outputs)
+  $sprites[:bullets].each do |sprite|
+    sprite[:animation].tick
+    bullet = Entities[sprite[:entity_id]]
+    sprite.x = bullet.position.x - 2
+    sprite.y = bullet.position.y - 3
+  end
+  outputs.primitives << $sprites[:bullets]
 end
 
 def tick(args)
   setup(args) if args.tick_count.zero?
+
+  Entities.args = args
   world_tick(args, process_input(args))
   render(args)
 
