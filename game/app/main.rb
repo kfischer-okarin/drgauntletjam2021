@@ -278,6 +278,7 @@ def render(args)
   render_bullets(args, screen)
   render_player(args, screen)
 
+  args.outputs.background_color = [48, 81, 130]
   args.outputs.primitives << {
     x: 0, y: 0, w: 1280, h: 720,
     path: :screen, source_x: 0, source_y: 0, source_w: 320, source_h: 180
@@ -318,7 +319,6 @@ def render_player(args, outputs)
   end
 
   outputs.primitives << player_sprite
-  outputs.primitives << [player.position, 1, 1].solid
 end
 
 def render_bullets(args, outputs)
