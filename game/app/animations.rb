@@ -71,6 +71,42 @@ class Animation
       { values: { source_x: 0, source_y: 3 * 16, flip_horizontally: false }, length: 10 },
       { values: { source_x: 16, source_y: 3 * 16, flip_horizontally: false }, length: 10 }
     ],
+    character_shoot_down: [
+      { values: { source_x: 16, source_y: 2 * 16, flip_horizontally: false } }
+    ],
+    character_shoot_left: [
+      { values: { source_x: 16, source_y: 1 * 16, flip_horizontally: true } }
+    ],
+    character_shoot_right: [
+      { values: { source_x: 16, source_y: 1 * 16, flip_horizontally: false } }
+    ],
+    character_shoot_up: [
+      { values: { source_x: 16, source_y: 0 * 16, flip_horizontally: false } }
+    ],
+    character_shoot_walk_down: [
+      { values: { source_x: 32, source_y: 2 * 16, flip_horizontally: false }, length: 10 },
+      { values: { source_x: 16, source_y: 2 * 16, flip_horizontally: false }, length: 10 },
+      { values: { source_x: 0, source_y: 2 * 16, flip_horizontally: false }, length: 10 },
+      { values: { source_x: 16, source_y: 2 * 16, flip_horizontally: false }, length: 10 }
+    ],
+    character_shoot_walk_left: [
+      { values: { source_x: 32, source_y: 1 * 16, flip_horizontally: true }, length: 10 },
+      { values: { source_x: 16, source_y: 1 * 16, flip_horizontally: true }, length: 10 },
+      { values: { source_x: 0, source_y: 1 * 16, flip_horizontally: true }, length: 10 },
+      { values: { source_x: 16, source_y: 1 * 16, flip_horizontally: true }, length: 10 }
+    ],
+    character_shoot_walk_right: [
+      { values: { source_x: 32, source_y: 1 * 16, flip_horizontally: false }, length: 10 },
+      { values: { source_x: 16, source_y: 1 * 16, flip_horizontally: false }, length: 10 },
+      { values: { source_x: 0, source_y: 1 * 16, flip_horizontally: false }, length: 10 },
+      { values: { source_x: 16, source_y: 1 * 16, flip_horizontally: false }, length: 10 }
+    ],
+    character_shoot_walk_up: [
+      { values: { source_x: 32, source_y: 0 * 16, flip_horizontally: false }, length: 10 },
+      { values: { source_x: 16, source_y: 0 * 16, flip_horizontally: false }, length: 10 },
+      { values: { source_x: 0, source_y: 0 * 16, flip_horizontally: false }, length: 10 },
+      { values: { source_x: 16, source_y: 0 * 16, flip_horizontally: false }, length: 10 }
+    ],
     bullet: [
       { values: { source_x: 0 }, length: 3 },
       { values: { source_x: 4 }, length: 3 },

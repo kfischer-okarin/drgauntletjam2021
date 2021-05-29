@@ -81,6 +81,8 @@ def setup(args)
     position: [160, 90],
     movement: [0, 0],
     direction: [0, -1],
+    face_direction: [0, -1],
+    shooting: false,
     shoot_cooldown: 30,
     time_until_next_shot: 0
   )
@@ -147,7 +149,7 @@ end
 
 def world_tick(args, input_events)
   calc_player_movement(args, input_events)
-  handle_shoot(args, input_events)
+  handle_shoot(args)
 
   handle_movement(args)
 end
@@ -166,23 +168,42 @@ def calc_player_movement(args, input_events)
     player.movement.mult_scalar!(walk_shoot_same ? 1.2 : 0.7)
   end
 
+  player.shooting = false
+
   if !shoot_direction.zero?
+    player.shooting = true
     player.direction.assign_array! shoot_direction
   elsif !movement.zero?
     player.direction.assign_array! movement
   end
+
+  player.face_direction.assign_array! player.direction if player.direction.x.zero? || player.direction.y.zero?
 end
 
-def handle_shoot(args, input_events)
+def player_bullet_origin(player)
+  case player.face_direction
+  when [0, 1]
+    player.position.add_array [2, 8]
+  when [0, -1]
+    player.position.add_array [-2, 0]
+  when [1, 0]
+    player.position.add_array [6, 6]
+  when [-1, 0]
+    player.position.add_array [-6, 6]
+  end
+end
+
+def handle_shoot(args)
   player = args.state.player
   player.time_until_next_shot -= 1 if player.time_until_next_shot.positive?
-  return if input_events[:shoot_direction].zero? || player.time_until_next_shot.positive?
+  return if !player.shooting || player.time_until_next_shot.positive?
 
+  direction = player.direction
   bullet = args.state.new_entity_strict(
     :bullet,
     id: generate_next_entity_id(args),
-    position: player.position.add_array(input_events[:shoot_direction].mult_scalar(8)).add_array!([0, 8]),
-    movement: input_events[:shoot_direction].mult_scalar(2)
+    position: player_bullet_origin(player),
+    movement: direction.mult_scalar(2)
   )
 
   Entities << bullet
@@ -198,23 +219,39 @@ end
 def next_player_animation(player)
   moving = !player.movement.zero?
 
-  case player.direction
+  case player.face_direction
   when [0, 1]
-    moving ? :character_walk_up : :character_up
+    if moving
+      player.shooting ? :character_shoot_walk_up : :character_walk_up
+    else
+      player.shooting ? :character_shoot_up : :character_up
+    end
   when [1, 0]
-    moving ? :character_walk_right : :character_right
+    if moving
+      player.shooting ? :character_shoot_walk_right : :character_walk_right
+    else
+      player.shooting ? :character_shoot_right : :character_right
+    end
   when [-1, 0]
-    moving ? :character_walk_left : :character_left
+    if moving
+      player.shooting ? :character_shoot_walk_left : :character_walk_left
+    else
+      player.shooting ? :character_shoot_left : :character_left
+    end
   when [0, -1]
-    moving ? :character_walk_down : :character_down
+    if moving
+      player.shooting ? :character_shoot_walk_down : :character_walk_down
+    else
+      player.shooting ? :character_shoot_down : :character_down
+    end
   end
 end
 
 def render(args)
   screen = args.outputs[:screen]
   add_new_entity_sprites(args)
-  render_player(args, screen)
   render_bullets(args, screen)
+  render_player(args, screen)
 
   args.outputs.primitives << {
     x: 0, y: 0, w: 1280, h: 720,
