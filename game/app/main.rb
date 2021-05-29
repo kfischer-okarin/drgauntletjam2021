@@ -45,8 +45,10 @@ module Entities
   class << self
     def setup(args)
       args.state.new_entities = []
+      args.state.deleted_entities = []
       args.state.entities = {}
       args.state.moving_entities = {}
+      args.state.bullets = {}
       self.args = args
     end
 
@@ -63,6 +65,15 @@ module Entities
       @args.state.new_entities << entity.id
       @entities[entity.id] = entity
       @args.state.moving_entities[entity.id] = entity if entity.respond_to? :movement
+      @args.state.bullets[entity.id] = entity if entity.respond_to? :bullet
+    end
+
+    def delete(entity)
+      id = entity.id
+      @args.state.deleted_entities << id
+      @entities.delete id
+      @args.state.moving_entities.delete id if entity.respond_to? :movement
+      @args.state.bullets.delete id if entity.respond_to? :bullet
     end
   end
 end
@@ -152,6 +163,7 @@ def world_tick(args, input_events)
   handle_shoot(args)
 
   handle_movement(args)
+  remove_bullets_out_of_screen(args)
 end
 
 def calc_player_movement(args, input_events)
@@ -203,7 +215,8 @@ def handle_shoot(args)
     :bullet,
     id: generate_next_entity_id(args),
     position: player_bullet_origin(player),
-    movement: direction.mult_scalar(2)
+    movement: direction.mult_scalar(2),
+    bullet: true
   )
 
   Entities << bullet
@@ -213,6 +226,17 @@ end
 def handle_movement(args)
   args.state.moving_entities.each_value do |entity|
     entity.position.add_array! entity.movement
+  end
+end
+
+def remove_bullets_out_of_screen(args)
+  out_of_screen = args.state.bullets.each_value.select { |bullet|
+    position = bullet.position
+    position.x < -20 || position.x > 340 || position.y < -20 || position.y > 200
+  }
+
+  out_of_screen.each do |bullet|
+    Entities.delete bullet
   end
 end
 
@@ -250,6 +274,7 @@ end
 def render(args)
   screen = args.outputs[:screen]
   add_new_entity_sprites(args)
+  remove_deleted_entity_sprites(args)
   render_bullets(args, screen)
   render_player(args, screen)
 
@@ -268,6 +293,14 @@ def add_new_entity_sprites(args)
     end
   end
   args.state.new_entities.clear
+end
+
+def remove_deleted_entity_sprites(args)
+  return if args.state.deleted_entities.empty?
+
+  deleted_entities = args.state.deleted_entities
+  $sprites[:bullets].reject! { |sprite| deleted_entities.include? sprite[:entity_id] }
+  deleted_entities.clear
 end
 
 def render_player(args, outputs)
