@@ -1,24 +1,25 @@
 class Animation
   attr_reader :id
 
-  def initialize(id)
-    @id = id
-    @frames = ANIMATIONS[id]
+  def initialize(sprite, animation_id)
+    @sprite = sprite
+    @id = animation_id
+    @frames = ANIMATIONS[animation_id]
     @current_frame = @frames[0]
     @frame_index = 0
     @frame_tick = 0
     @updated = true
   end
 
-  def updated?
-    @updated
-  end
-
-  def frame_values
-    @current_frame[:values]
+  def apply_to_sprite
+    @current_frame[:values].each do |attribute, value|
+      @sprite[attribute] = value
+    end
   end
 
   def tick
+    apply_to_sprite if @updated
+
     @updated = false if @updated
 
     frame_length = @current_frame[:length]

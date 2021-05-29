@@ -55,9 +55,14 @@ def setup(args)
   )
   $sprites = {
     player: {
-      x: 0, y:0, w: 16, h: 16, path: 'sprites/character.png', source_w: 16, source_h: 16,
-      animation: Animation.new(:character_down)
-    }.sprite
+      x: 0, y:0, w: 16, h: 16, path: 'sprites/character.png', source_w: 16, source_h: 16
+    }.sprite.tap { |sprite| sprite[:animation] = Animation.new(sprite, :character_down) },
+    bullets: [
+      {
+        x: 200, y:100, w: 4, h: 6, path: 'sprites/bullet.png', source_w: 4, source_h: 6,
+        angle_anchor_x: 0.5, angle_anchor_y: 0.5,
+      }.sprite.tap { |sprite| sprite[:animation] = Animation.new(sprite, :bullet) }
+    ]
   }
   args.state.entities = {}
   args.state.moving_entities = {}
@@ -151,15 +156,9 @@ def render_player(args, outputs)
   player_sprite.y = player.position.y
   animation = player_sprite[:animation]
 
-  if animation.updated?
-    animation.frame_values.each do |attribute, value|
-      player_sprite[attribute] = value
-    end
-  end
-
   next_animation_id = next_player_animation(player)
   if next_animation_id && next_animation_id != animation.id
-    player_sprite[:animation] = Animation.new(next_animation_id)
+    player_sprite[:animation] = Animation.new(player_sprite, next_animation_id)
   else
     animation.tick
   end
