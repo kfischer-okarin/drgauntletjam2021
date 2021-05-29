@@ -5,6 +5,10 @@ class Array
     all?(&:zero?)
   end
 
+  def diagonal?
+    !self[0].zero? && !self[1].zero?
+  end
+
   def add_array!(other)
     index = 0
     while index < length
@@ -178,6 +182,7 @@ def calc_player_movement(args, input_events)
       (!shoot_direction.y.zero? && shoot_direction.y == movement.y)
 
     player.movement.mult_scalar!(walk_shoot_same ? 1.2 : 0.7)
+    player.movement.mult_scalar!(0.7) if movement.diagonal?
   end
 
   player.shooting = false
@@ -189,7 +194,7 @@ def calc_player_movement(args, input_events)
     player.direction.assign_array! movement
   end
 
-  player.face_direction.assign_array! player.direction if player.direction.x.zero? || player.direction.y.zero?
+  player.face_direction.assign_array! player.direction unless player.direction.diagonal?
 end
 
 def player_bullet_origin(player)
@@ -210,12 +215,13 @@ def handle_shoot(args)
   player.time_until_next_shot -= 1 if player.time_until_next_shot.positive?
   return if !player.shooting || player.time_until_next_shot.positive?
 
-  direction = player.direction
+  bullet_movement = player.direction.mult_scalar(2)
+  bullet_movement.mult_scalar!(0.7) if bullet_movement.diagonal?
   bullet = args.state.new_entity_strict(
     :bullet,
     id: generate_next_entity_id(args),
     position: player_bullet_origin(player),
-    movement: direction.mult_scalar(2),
+    movement: bullet_movement,
     bullet: true
   )
 
