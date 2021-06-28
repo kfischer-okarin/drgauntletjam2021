@@ -1,3 +1,35 @@
-<html>
-  <body>Hello</body>
+<html lang="en">
+  <head><title>Eval</title></head>
+  <style>
+  pre {
+    border: solid 1px silver;
+    padding: 10px;
+    font-size: 14px;
+    white-space: pre-wrap;
+    white-space: -moz-pre-wrap;
+    white-space: -pre-wrap;
+    white-space: -o-pre-wrap;
+    word-wrap: break-word;
+  }
+  </style>
+  <body>
+    <form method="POST" action="localhost:9001/dragon/eval/">
+      <textarea name="code" id="code" name="w3review" rows="10" cols="80"># write your code here and set $result.
+$result = $gtk.args.state</textarea>
+      <br/>
+      <input type="submit" />
+    </form>
+    <pre>curl --data-urlencode "code=\$result = \$gtk.args.state" -X POST http://localhost:9001/dragon/eval/</pre>
+        <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/docs.html">Docs</a></li>
+      <li><a href="/dragon/control_panel/">Control Panel</a></li>
+      <li><a href="/dragon/console/">Console</a></li>
+      <li><a href="/dragon/log/">Logs</a></li>
+      <li><a href="/dragon/puts/">Puts</a></li>
+      <li><a href="/dragon/code/">Code</a></li>
+      <li><a href="/dragon/eval/">Eval</a></li>
+    </ul>
+
+  </body>
 </html>
